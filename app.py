@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, render_template_string, make_response
 from flask_cors import CORS
 import joblib
 import os
-#import weasyprint
+# import weasyprint
 from datetime import datetime
 
 # Flask アプリ作成
@@ -17,7 +17,7 @@ MODEL_DIR = './models'
 def index():
     return "🏡 Real Estate Prediction API is running!"
 
-# ----- /predict API（既存のまま残す） -----
+# /predict API
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -52,7 +52,7 @@ def predict():
         print("予測エラー:", str(e))
         return jsonify({"error": str(e)}), 500
 
-# ----- /generate_pdf API（追加） -----
+# /generate_pdf API
 @app.route('/generate_pdf', methods=['POST'])
 def generate_pdf():
     try:
@@ -61,7 +61,6 @@ def generate_pdf():
         print("---- PDF生成リクエスト受信 ✅ ----")
         print(data)
 
-        # HTMLテンプレート（簡易版・ここからルノアPDF風に発展可能）
         html_template = """
         <html>
         <head>
@@ -106,7 +105,6 @@ def generate_pdf():
         </html>
         """
 
-        # レンダリング
         rendered_html = render_template_string(
             html_template,
             date=datetime.now().strftime("%Y-%m-%d"),
@@ -116,8 +114,8 @@ def generate_pdf():
             ai_market_liquidity=data.get('ai_market_liquidity', '未判定')
         )
 
-        # PDF生成
-        pdf = weasyprint.HTML(string=rendered_html).write_pdf()
+        # ★ 今は weasyprint コメントアウトしているので仮PDFデータを返す
+        pdf = "PDF生成は現在コメントアウト中（weasyprint有効化してね）".encode('utf-8')
 
         response = make_response(pdf)
         response.headers['Content-Type'] = 'application/pdf'
@@ -129,6 +127,7 @@ def generate_pdf():
         print("PDF生成エラー:", str(e))
         return jsonify({"error": str(e)}), 500
 
-# ----- アプリ起動 -----
+# アプリ起動設定（Railway / Heroku / Vercel でもOK対応版）
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
